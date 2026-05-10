@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>하루 루틴</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #111;
+  color: #eee;
+  font-family: -apple-system, 'Apple SD Gothic Neo', sans-serif;
+  padding: 0 0 120px;
+}
+
+/* 헤더 */
+.header {
+background: #111;
+padding: 24px 16px 0;
+position: sticky;
+top: 0;
+z-index: 10;
+}
+h1 { text-align: center; font-size: 14px; color: #c8f542; letter-spacing: 3px; margin-bottom: 4px; }
+.date { text-align: center; font-size: 11px; color: #555; margin-bottom: 14px; }
+
+/* 탭 */
+.tab-bar {
+display: flex; gap: 6px; margin-bottom: 14px;
+overflow-x: auto; padding-bottom: 2px;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab {
+flex-shrink: 0;
+padding: 9px 14px;
+background: #1a1a1a; border: 1px solid #2a2a2a;
+border-radius: 10px; font-size: 12px; color: #555;
+cursor: pointer; -webkit-tap-highlight-color: transparent;
+white-space: nowrap;
+}
+.tab.active { background: #1c2010; border-color: #c8f542; color: #c8f542; font-weight: 600; }
+
+/* 진행바 */
+.prog-bar-wrap {
+background: #1a1a1a; border: 1px solid #222;
+border-radius: 12px; padding: 12px 16px;
+margin: 0 16px 14px;
+}
+.prog-label-row { display: flex; justify-content: space-between; margin-bottom: 7px; font-size: 12px; }
+.prog-label { color: #555; }
+.prog-count { color: #c8f542; font-weight: 600; }
+.bar-bg { height: 5px; background: #222; border-radius: 3px; }
+.bar-fill { height: 100%; background: #c8f542; border-radius: 3px; transition: width 0.3s ease; width: 0%; }
+
+/* 라이브 칼로리 */
+.live-bar {
+background: #1a1a1a; border: 1px solid #2a2a2a;
+border-radius: 12px; padding: 13px 16px;
+margin: 0 16px 14px;
+display: flex; justify-content: space-between; align-items: center;
+}
+.live-kcal { font-size: 28px; font-weight: 600; color: #c8f542; }
+.live-kcal span { font-size: 12px; color: #555; margin-left: 3px; }
+.live-macros { text-align: right; font-size: 11px; color: #555; line-height: 1.9; }
+.live-macros b { color: #888; }
+
+/* 페이지 */
+.page { display: none; padding: 0 16px; }
+.page.active { display: block; }
+
+.section-label {
+font-size: 10px; color: #c8f542;
+letter-spacing: 2px; margin: 20px 0 8px;
+text-transform: uppercase;
+}
+.group-label {
+font-size: 10px; color: #444;
+letter-spacing: 1px; margin: 12px 0 5px;
+}
+
+/* 아이템 */
+.item {
+background: #1a1a1a; border: 1px solid #2a2a2a;
+border-radius: 11px; padding: 13px 14px;
+margin-bottom: 6px;
+display: flex; align-items: center; gap: 11px;
+cursor: pointer; -webkit-tap-highlight-color: transparent;
+transition: all 0.15s;
+}
+.item.on { border-color: #c8f542; background: #1c2010; }
+.item.on2 { border-color: #42c8f5; background: #101c20; }
+.item.on3 { border-color: #a742f5; background: #17102a; }
+
+.box {
+width: 21px; height: 21px; border: 1.5px solid #333;
+border-radius: 6px; display: flex; align-items: center; justify-content: center;
+flex-shrink: 0; font-size: 12px; color: transparent; transition: all 0.15s;
+}
+.item.on .box { background: #c8f542; border-color: #c8f542; color: #000; }
+.item.on2 .box { background: #42c8f5; border-color: #42c8f5; color: #000; }
+.item.on3 .box { background: #a742f5; border-color: #a742f5; color: #fff; }
+
+.name { flex: 1; font-size: 13px; color: #bbb; line-height: 1.4; }
+.sub { font-size: 11px; color: #444; margin-top: 2px; }
+.item.on .name { color: #c8f542; }
+.item.on2 .name { color: #42c8f5; }
+.item.on3 .name { color: #a742f5; }
+
+.val { font-size: 12px; color: #444; text-align: right; white-space: nowrap; }
+.item.on .val { color: #c8f542; }
+
+.badge {
+font-size: 10px; border-radius: 5px; padding: 2px 7px; white-space: nowrap;
+}
+.b-study { background: rgba(167,66,245,0.12); color: #a742f5; }
+.b-work { background: rgba(66,200,245,0.12); color: #42c8f5; }
+.b-food { background: rgba(200,245,66,0.1); color: #c8f542; }
+.b-gut { background: rgba(245,167,66,0.12); color: #f5a742; }
+
+.fixed-item {
+background: #161616; border: 1px solid #1e1e1e;
+border-radius: 11px; padding: 11px 14px; margin-bottom: 6px;
+display: flex; align-items: center; gap: 10px;
+color: #444; font-size: 13px;
+}
+
+.divider { height: 1px; background: #1e1e1e; margin: 6px 0 14px; }
+
+/* 결과 버튼 */
+.result-btn {
+position: fixed; bottom: 20px; left: 16px; right: 16px;
+background: #c8f542; color: #000; border: none;
+border-radius: 14px; padding: 17px;
+font-size: 15px; font-weight: 700; font-family: inherit;
+cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+
+/* 모달 */
+.overlay {
+display: none; position: fixed; inset: 0;
+background: rgba(0,0,0,0.92); z-index: 99;
+justify-content: center; align-items: flex-end;
+}
+.overlay.show { display: flex; }
+.modal {
+background: #1a1a1a; border-top: 1px solid #2a2a2a;
+border-radius: 20px 20px 0 0; padding: 26px 20px 40px;
+width: 100%; max-height: 85vh; overflow-y: auto;
+}
+.modal-title { text-align: center; font-size: 11px; color: #c8f542; letter-spacing: 3px; margin-bottom: 20px; }
+
+.result-grid { display: flex; gap: 8px; margin-bottom: 20px; }
+.r-card {
+flex: 1; background: #111; border-radius: 10px; padding: 12px 10px; text-align: center;
+}
+.r-card .num { font-size: 22px; font-weight: 700; color: #c8f542; }
+.r-card .lbl { font-size: 10px; color: #444; margin-top: 4px; }
+
+.r-section { border-top: 1px solid #1e1e1e; padding-top: 14px; margin-bottom: 14px; }
+.r-title { font-size: 10px; color: #444; letter-spacing: 2px; margin-bottom: 10px; }
+.r-row {
+display: flex; justify-content: space-between;
+padding: 8px 0; border-bottom: 1px solid #161616;
+font-size: 13px; color: #666;
+}
+.r-row span:last-child { color: #444; font-size: 11px; }
+.empty { text-align: center; color: #333; padding: 12px 0; font-size: 13px; }
+
+.close-btn {
+width: 100%; margin-top: 18px;
+background: transparent; border: 1px solid #222;
+border-radius: 12px; padding: 14px;
+color: #444; font-size: 14px; font-family: inherit; cursor: pointer;
+}
+</style>
+
+</head>
+<body>
+
+<div class="header">
+  <h1>하루 루틴</h1>
+  <div class="date" id="date"></div>
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('weekday', this)">📚 평일</div>
+    <div class="tab" onclick="switchTab('weekend', this)">🌞 주말</div>
+    <div class="tab" onclick="switchTab('diet', this)">🍽 식단</div>
+    <div class="tab" onclick="switchTab('workout', this)">💪 홈트</div>
+  </div>
+  <div class="prog-bar-wrap">
+    <div class="prog-label-row">
+      <span class="prog-label">오늘 진행률</span>
+      <span class="prog-count"><span id="done-count">0</span> / <span id="total-count">0</span></span>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" id="prog-fill"></div></div>
+  </div>
+</div>
+
+<!-- ─── 평일 탭 ─── -->
+
+<div class="page active" id="page-weekday">
+
+  <div class="section-label">🌅 아침</div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">기상 후 물 + 우루사 + 유산균</div></div>
+    <div class="badge b-gut">필수</div>
+  </div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">아침 식사</div><div class="sub">고구마 or 잡곡밥 + 단백질</div></div>
+    <div class="badge b-food">식단</div>
+  </div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">워드마스터 하루치 암기</div><div class="sub">등교 전 or 쉬는시간</div></div>
+    <div class="badge b-study">공부</div>
+  </div>
+
+  <div class="section-label">📖 오후 — 스카</div>
+  <div style="font-size:11px;color:#444;margin-bottom:10px">4시 하교 후 바로 출근</div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">수학 인강 1강</div></div>
+    <div class="badge b-study">필수</div>
+  </div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">개념 문제 풀기</div></div>
+    <div class="badge b-study">필수</div>
+  </div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">학교 수업 복습</div></div>
+    <div class="badge b-study">필수</div>
+  </div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">선택 공부</div><div class="sub">영어 / 국어 / 수행평가 준비 중 택 1+</div></div>
+    <div class="badge b-study">선택</div>
+  </div>
+
+  <div class="section-label">🏠 귀가 후</div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">저녁 식사</div><div class="sub">귀가 후 바로 · 자기 2~3시간 전 끝내기</div></div>
+    <div class="badge b-food">식단</div>
+  </div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">홈트 타바타 10동작</div><div class="sub">저녁 식사 1시간 후 · 약 18분</div></div>
+    <div class="badge b-work">운동</div>
+  </div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">샤워</div></div>
+  </div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">우루사 + 효소</div></div>
+    <div class="badge b-gut">필수</div>
+  </div>
+  <div class="item" data-group="wd" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">12시 전 취침</div><div class="sub">7시간 이상 수면</div></div>
+  </div>
+</div>
+
+<!-- ─── 주말 탭 ─── -->
+
+<div class="page" id="page-weekend">
+
+  <div class="section-label">🌅 오전</div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">8시 기상</div></div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">기상 후 물 + 우루사 + 유산균</div></div>
+    <div class="badge b-gut">필수</div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">아침 식사</div><div class="sub">고구마 or 잡곡밥 + 단백질</div></div>
+    <div class="badge b-food">식단</div>
+  </div>
+
+  <div class="section-label">📖 오전 9시 — 스카</div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">수학 인강 1강</div></div>
+    <div class="badge b-study">필수</div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">개념 문제 풀기</div></div>
+    <div class="badge b-study">필수</div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">학교 수업 복습</div></div>
+    <div class="badge b-study">필수</div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">자이스토리 — 이번 주 단원 풀기</div><div class="sub">기초 + 중간 단계까지</div></div>
+    <div class="badge b-study">주말 필수</div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">워드마스터 주간 복습</div><div class="sub">이번 주 외운 것 체화</div></div>
+    <div class="badge b-study">주말 필수</div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">선택 공부</div><div class="sub">영어 / 국어 / 수행평가 준비 입맛대로</div></div>
+    <div class="badge b-study">선택</div>
+  </div>
+
+  <div class="section-label">🏠 귀가 후</div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">저녁 식사</div></div>
+    <div class="badge b-food">식단</div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">오후 7시 런데이 켜고 러닝</div><div class="sub">주말 필수 유산소</div></div>
+    <div class="badge b-work">운동</div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">샤워</div></div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">우루사 + 효소</div></div>
+    <div class="badge b-gut">필수</div>
+  </div>
+  <div class="item" data-group="we" onclick="tap(this,'on')">
+    <div class="box">✓</div>
+    <div><div class="name">12시 전 취침</div><div class="sub">7시간 이상 수면</div></div>
+  </div>
+</div>
+
+<!-- ─── 식단 탭 ─── -->
+
+<div class="page" id="page-diet">
+
+  <div class="live-bar" style="margin:0 0 14px">
+    <div class="live-kcal" id="live">0<span>kcal</span></div>
+    <div class="live-macros">탄수 <b id="lc">0g</b><br>단백 <b id="lp">0g</b><br>지방 <b id="lf">0g</b></div>
+  </div>
+
+  <div class="section-label">기상 직후</div>
+  <div class="fixed-item">💧 물 + 우루사 · 큰 컵 1잔</div>
+  <div class="fixed-item">💊 유산균</div>
+
+  <div class="section-label">아침 8:00</div>
+  <div class="group-label">탄수 — 택 1</div>
+  <div class="item" data-kcal="135" data-c="31" data-p="2" data-f="0" data-name="고구마 (아침)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">고구마</div><div class="sub">중간 크기 1개</div></div>
+    <div class="val">135kcal</div>
+  </div>
+  <div class="item" data-kcal="167" data-c="36" data-p="4" data-f="1" data-name="잡곡밥 (아침)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">잡곡밥</div><div class="sub">반 공기</div></div>
+    <div class="val">167kcal</div>
+  </div>
+  <div class="group-label">단백질 — 택 1</div>
+  <div class="item" data-kcal="130" data-c="6" data-p="12" data-f="7" data-name="그릭요거트 (아침)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">그릭요거트</div><div class="sub">1컵 200g</div></div>
+    <div class="val">130kcal</div>
+  </div>
+  <div class="item" data-kcal="156" data-c="0" data-p="13" data-f="11" data-name="삶은 계란 2개 (아침)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">삶은 계란</div><div class="sub">2개</div></div>
+    <div class="val">156kcal</div>
+  </div>
+  <div class="group-label">지방+섬유소</div>
+  <div class="item" data-kcal="116" data-c="4" data-p="4" data-f="10" data-name="아몬드 (아침)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">아몬드</div><div class="sub">15알</div></div>
+    <div class="val">116kcal</div>
+  </div>
+  <div class="item" data-kcal="18" data-c="3" data-p="1" data-f="0" data-name="방울토마토 (아침)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">방울토마토</div><div class="sub">한 줌</div></div>
+    <div class="val">18kcal</div>
+  </div>
+
+  <div class="section-label">점심 12:00</div>
+  <div class="group-label">탄수 — 택 1</div>
+  <div class="item" data-kcal="135" data-c="31" data-p="2" data-f="0" data-name="고구마 (점심)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">고구마</div><div class="sub">중간 크기 1개</div></div>
+    <div class="val">135kcal</div>
+  </div>
+  <div class="item" data-kcal="167" data-c="36" data-p="4" data-f="1" data-name="잡곡밥 (점심)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">잡곡밥</div><div class="sub">반 공기</div></div>
+    <div class="val">167kcal</div>
+  </div>
+  <div class="group-label">단백질 — 택 1</div>
+  <div class="item" data-kcal="180" data-c="0" data-p="12" data-f="14" data-name="계란후라이 2개 (점심)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">계란후라이</div><div class="sub">2개</div></div>
+    <div class="val">180kcal</div>
+  </div>
+  <div class="item" data-kcal="160" data-c="4" data-p="11" data-f="11" data-name="토마토달걀볶음 (점심)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">토마토달걀볶음</div><div class="sub">토마토 1개 + 계란 2개</div></div>
+    <div class="val">160kcal</div>
+  </div>
+  <div class="item" data-kcal="112" data-c="2" data-p="10" data-f="6" data-name="두부 반모 (점심)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">두부</div><div class="sub">반모</div></div>
+    <div class="val">112kcal</div>
+  </div>
+  <div class="group-label">지방 — 택 1</div>
+  <div class="item" data-kcal="106" data-c="0" data-p="0" data-f="12" data-name="들기름 (점심)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">들기름</div><div class="sub">1큰술</div></div>
+    <div class="val">106kcal</div>
+  </div>
+  <div class="item" data-kcal="106" data-c="0" data-p="0" data-f="12" data-name="올리브유 (점심)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">올리브유</div><div class="sub">1큰술</div></div>
+    <div class="val">106kcal</div>
+  </div>
+  <div class="group-label">채소 — 택 1</div>
+  <div class="item" data-kcal="55" data-c="4" data-p="2" data-f="3" data-name="꼬시래기볶음 (점심)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">꼬시래기볶음</div><div class="sub">한 주먹</div></div>
+    <div class="val">55kcal</div>
+  </div>
+  <div class="item" data-kcal="45" data-c="5" data-p="1" data-f="1" data-name="오이+쌈장 (점심)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">오이 + 쌈장</div><div class="sub">1개 + 1큰술</div></div>
+    <div class="val">45kcal</div>
+  </div>
+
+  <div class="section-label">오후 간식</div>
+  <div class="item" data-kcal="185" data-c="4" data-p="4" data-f="18" data-name="호두 4알" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">호두</div><div class="sub">4알</div></div>
+    <div class="val">185kcal</div>
+  </div>
+  <div class="item" data-kcal="116" data-c="4" data-p="4" data-f="10" data-name="아몬드 15알 (간식)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">아몬드</div><div class="sub">15알</div></div>
+    <div class="val">116kcal</div>
+  </div>
+
+  <div class="section-label">저녁 19:00</div>
+  <div class="group-label">탄수 — 택 1</div>
+  <div class="item" data-kcal="135" data-c="31" data-p="2" data-f="0" data-name="고구마 (저녁)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">고구마</div><div class="sub">중간 크기 1개</div></div>
+    <div class="val">135kcal</div>
+  </div>
+  <div class="item" data-kcal="167" data-c="36" data-p="4" data-f="1" data-name="잡곡밥 (저녁)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">잡곡밥</div><div class="sub">반 공기</div></div>
+    <div class="val">167kcal</div>
+  </div>
+  <div class="group-label">단백질 — 택 1</div>
+  <div class="item" data-kcal="88" data-c="5" data-p="8" data-f="4" data-name="낫토 (저녁)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">낫토</div><div class="sub">1팩 · 장 건강</div></div>
+    <div class="val">88kcal</div>
+  </div>
+  <div class="item" data-kcal="180" data-c="1" data-p="12" data-f="14" data-name="계란스크램블 (저녁)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">계란스크램블</div><div class="sub">2개</div></div>
+    <div class="val">180kcal</div>
+  </div>
+  <div class="item" data-kcal="130" data-c="6" data-p="12" data-f="7" data-name="그릭요거트 (저녁)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">그릭요거트</div><div class="sub">1컵 200g</div></div>
+    <div class="val">130kcal</div>
+  </div>
+  <div class="item" data-kcal="140" data-c="3" data-p="12" data-f="8" data-name="두부간장조림 (저녁)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">두부간장조림</div><div class="sub">반모</div></div>
+    <div class="val">140kcal</div>
+  </div>
+  <div class="group-label">채소 — 택 1</div>
+  <div class="item" data-kcal="55" data-c="4" data-p="2" data-f="3" data-name="꼬시래기볶음 (저녁)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">꼬시래기볶음</div><div class="sub">한 주먹</div></div>
+    <div class="val">55kcal</div>
+  </div>
+  <div class="item" data-kcal="45" data-c="5" data-p="1" data-f="1" data-name="오이+쌈장 (저녁)" onclick="dtap(this)">
+    <div class="box">✓</div>
+    <div><div class="name">오이 + 쌈장</div><div class="sub">1개 + 1큰술</div></div>
+    <div class="val">45kcal</div>
+  </div>
+
+  <div class="section-label">저녁 후</div>
+  <div class="fixed-item">💊 우루사</div>
+  <div class="fixed-item">🌿 효소</div>
+  <div class="fixed-item">💧 물 · 큰 컵 1잔</div>
+</div>
+
+<!-- ─── 홈트 탭 ─── -->
+
+<div class="page" id="page-workout">
+  <div style="font-size:11px;color:#444;margin-bottom:16px">타바타 · 50초 운동 + 10초 휴식 × 10동작 · 약 17분<br>층간소음 없음 · 무릎 부담 최소</div>
+
+  <div class="section-label">🔥 뱃살 공략</div>
+  <div class="item" data-name="크런치" onclick="tap(this,'on2')">
+    <div class="box">✓</div>
+    <div><div class="name">크런치</div><div class="sub">50초 · 복근 직접 자극</div></div>
+    <div class="badge b-work">복근</div>
+  </div>
+  <div class="item" data-name="레그레이즈" onclick="tap(this,'on2')">
+    <div class="box">✓</div>
+    <div><div class="name">레그레이즈</div><div class="sub">50초 · 하복부</div></div>
+    <div class="badge b-work">복근</div>
+  </div>
+  <div class="item" data-name="바이시클 크런치" onclick="tap(this,'on2')">
+    <div class="box">✓</div>
+    <div><div class="name">바이시클 크런치</div><div class="sub">50초 · 옆구리+복근</div></div>
+    <div class="badge b-work">복근</div>
+  </div>
+
+  <div class="section-label">💪 팔뚝 공략</div>
+  <div class="item" data-name="푸시업" onclick="tap(this,'on2')">
+    <div class="box">✓</div>
+    <div><div class="name">푸시업</div><div class="sub">50초 · 가슴+팔뚝</div></div>
+    <div class="badge b-work">상체</div>
+  </div>
+  <div class="item" data-name="트라이셉스 딥스 (의자)" onclick="tap(this,'on2')">
+    <div class="box">✓</div>
+    <div><div class="name">트라이셉스 딥스</div><div class="sub">50초 · 의자 이용 · 팔뚝 뒤쪽</div></div>
+    <div class="badge b-work">팔뚝</div>
+  </div>
+  <div class="item" data-name="암서클" onclick="tap(this,'on2')">
+    <div class="box">✓</div>
+    <div><div class="name">암서클</div><div class="sub">50초 · 팔 돌리기 · 어깨+팔</div></div>
+    <div class="badge b-work">팔뚝</div>
+  </div>
+
+  <div class="section-label">🦵 근력 (무릎 부담 없음)</div>
+  <div class="item" data-name="스쿼트" onclick="tap(this,'on2')">
+    <div class="box">✓</div>
+    <div><div class="name">스쿼트</div><div class="sub">50초 · 천천히 · 무릎 발끝 안쪽 금지</div></div>
+    <div class="badge b-work">하체</div>
+  </div>
+  <div class="item" data-name="플랭크" onclick="tap(this,'on2')">
+    <div class="box">✓</div>
+    <div><div class="name">플랭크</div><div class="sub">50초 · 코어+전신</div></div>
+    <div class="badge b-work">코어</div>
+  </div>
+
+  <div class="section-label">🏃 유산소 (층간소음 없음)</div>
+  <div class="item" data-name="제자리 무릎 들기 (마칭)" onclick="tap(this,'on2')">
+    <div class="box">✓</div>
+    <div><div class="name">제자리 무릎 들기 (마칭)</div><div class="sub">50초 · 뛰지 않고 들어올리기</div></div>
+    <div class="badge b-work">유산소</div>
+  </div>
+  <div class="item" data-name="사이드 스텝" onclick="tap(this,'on2')">
+    <div class="box">✓</div>
+    <div><div class="name">사이드 스텝</div><div class="sub">50초 · 옆으로 빠르게 이동 · 소음 없음</div></div>
+    <div class="badge b-work">유산소</div>
+  </div>
+
+  <div class="divider"></div>
+  <div style="font-size:11px;color:#444;padding:4px 0 16px">👆 10동작 다 체크하면 타바타 완료 ✓<br>순서는 자유롭게 섞어도 돼</div>
+</div>
+
+<button class="result-btn" onclick="showResult()">결과 보기 →</button>
+
+<!-- 모달 -->
+
+<div class="overlay" id="overlay" onclick="closeOverlay(event)">
+  <div class="modal">
+    <div class="modal-title">오늘의 결과</div>
+    <div class="result-grid">
+      <div class="r-card">
+        <div class="num" id="r-kcal" style="font-size:26px">0</div>
+        <div class="lbl">kcal 섭취</div>
+      </div>
+      <div class="r-card">
+        <div class="num" id="r-done" style="color:#42c8f5">0</div>
+        <div class="lbl">루틴 완료</div>
+      </div>
+      <div class="r-card">
+        <div class="num" id="r-ex" style="color:#a742f5">0</div>
+        <div class="lbl">홈트 동작</div>
+      </div>
+    </div>
+    <div class="r-section">
+      <div class="r-title">완료한 루틴</div>
+      <div id="r-routine"></div>
+    </div>
+    <div class="r-section">
+      <div class="r-title">먹은 것들</div>
+      <div id="r-diet"></div>
+    </div>
+    <div class="r-section">
+      <div class="r-title">완료한 홈트</div>
+      <div id="r-workout"></div>
+    </div>
+    <button class="close-btn" onclick="document.getElementById('overlay').classList.remove('show')">닫기</button>
+  </div>
+</div>
+
+<script>
+// 날짜
+const d = new Date();
+const days = ['일','월','화','수','목','금','토'];
+document.getElementById('date').textContent =
+  d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')+' '+days[d.getDay()];
+
+// 탭 전환
+function switchTab(t, el) {
+  document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('page-'+t).classList.add('active');
+}
+
+// 체크 토글
+function tap(el, cls) {
+  if (el.classList.contains(cls)) {
+    el.classList.remove(cls);
+  } else {
+    el.classList.add(cls);
+  }
+  updateProg();
+}
+
+function dtap(el) {
+  el.classList.toggle('on');
+  updateKcal();
+  updateProg();
+}
+
+// 칼로리 업데이트
+function updateKcal() {
+  let k=0,c=0,p=0,f=0;
+  document.querySelectorAll('#page-diet .item.on').forEach(i=>{
+    k+=+i.dataset.kcal; c+=+i.dataset.c; p+=+i.dataset.p; f+=+i.dataset.f;
+  });
+  document.getElementById('live').innerHTML = k+'<span>kcal</span>';
+  document.getElementById('lc').textContent = c+'g';
+  document.getElementById('lp').textContent = p+'g';
+  document.getElementById('lf').textContent = f+'g';
+}
+
+// 진행률 업데이트
+function updateProg() {
+  const all = [...document.querySelectorAll('.item')];
+  const done = all.filter(i => i.classList.contains('on') || i.classList.contains('on2') || i.classList.contains('on3'));
+  const total = all.length;
+  const pct = total > 0 ? Math.round(done.length/total*100) : 0;
+  document.getElementById('done-count').textContent = done.length;
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('prog-fill').style.width = pct+'%';
+}
+
+// 결과 보기
+function showResult() {
+  let k=0,c=0,p=0,f=0;
+  const dietItems = [...document.querySelectorAll('#page-diet .item.on')];
+  const routineItems = [...document.querySelectorAll('#page-weekday .item.on, #page-weekend .item.on')];
+  const workoutItems = [...document.querySelectorAll('#page-workout .item.on2')];
+  dietItems.forEach(i=>{ k+=+i.dataset.kcal; c+=+i.dataset.c; p+=+i.dataset.p; f+=+i.dataset.f; });
+
+  document.getElementById('r-kcal').textContent = k;
+  document.getElementById('r-done').textContent = routineItems.length;
+  document.getElementById('r-ex').textContent = workoutItems.length;
+
+  const rl = document.getElementById('r-routine');
+  rl.innerHTML = routineItems.length === 0
+    ? '<div class="empty">완료한 루틴 없음</div>'
+    : routineItems.map(i=>`<div class="r-row"><span>${i.querySelector('.name').textContent}</span><span>✓</span></div>`).join('');
+
+  const dl = document.getElementById('r-diet');
+  dl.innerHTML = dietItems.length === 0
+    ? '<div class="empty">체크한 식단 없음</div>'
+    : dietItems.map(i=>`<div class="r-row"><span>${i.dataset.name}</span><span>${i.dataset.kcal}kcal</span></div>`).join('')
+    + (dietItems.length > 0 ? `<div class="r-row" style="color:#444;font-size:11px"><span>탄 ${c}g · 단 ${p}g · 지 ${f}g</span><span></span></div>` : '');
+
+  const wl = document.getElementById('r-workout');
+  wl.innerHTML = workoutItems.length === 0
+    ? '<div class="empty">완료한 동작 없음</div>'
+    : workoutItems.map(i=>`<div class="r-row"><span>${i.dataset.name}</span><span>✓</span></div>`).join('');
+
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeOverlay(e) {
+  if(e.target===document.getElementById('overlay'))
+    document.getElementById('overlay').classList.remove('show');
+}
+
+updateProg();
+</script>
+
+</body>
+</html>
